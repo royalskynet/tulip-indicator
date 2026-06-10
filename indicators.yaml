@@ -1,11 +1,11 @@
-# 大躍進指標（GLI）機讀規格 v1.0
+# 鬱金香指標（TI）機讀規格 v1.0
 # score: 0=綠 1=黃 2=紅；判定不明計 0 並標註「未驗證」
 # fetch: 直接可用的搜尋/查詢指令
 
 meta:
   version: "1.0"
   created: "2026-06-10"
-  scoring: "GLI = min(100, 0.20*A + 0.30*B + 0.30*C + 0.20*D + bonus)"
+  scoring: "TI = min(100, 0.20*A + 0.30*B + 0.30*C + 0.20*D + bonus)"
 
 layers:
   A:
