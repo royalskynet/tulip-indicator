@@ -1,12 +1,10 @@
 ---
 name: tulip-indicator
-description: >
-  鬱金香指標（Tulip Indicator, TI）——泡沫崩解型大回調傳導鏈監測系統。
-  合成四層指標（A 倉位→B 邊緣流動性→C 信貸→D 結構確認）為 0–100 的鬱金香值。
-  觸發：「跑一次鬱金香指標」「今天 TI 多少」「鬱金香日報」「TI 更新」「bubble check」
+description: "鬱金香指標（TI）：泡沫崩解傳導鏈監測，0–100分，四層加權（A倉位/B流動性/C信貸/D結構）。含計分公式、閾值表、報告模板。"
 metadata:
-  emoji: "🌷"
-  type: rigid
+  hermes:
+    requires_toolsets: [web]
+    tags: [market, risk, bubble, indicator, finance]
 ---
 
 # 鬱金香指標執行 Skill
