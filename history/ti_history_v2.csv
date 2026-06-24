@@ -1,0 +1,2 @@
+date,TI_display,TI_raw,state,M1,M2,M3,M4,M5,M6,M7,放大器(乾柴多高),領先引信(火星點了沒),確認(燒起來沒),M1.bdc_navdisc_gate,M1.hy_ig,M1.hy_oas,M2.ai_credit_fast,M2.hyperscaler_capex_trigger_x_gate,M3.inflow_decel,M3.ipo_withdrawal_rate,M4.ai_debt_growth,M4.margin_debt_yoy,M5.mag7_share,M5.xasset_corr,M6.breadth_200dma,M6.drawdown_ath,M6.vix_term,M7.ipo_first_day_pop_fomo,M7.us_sentiment_positioning,unverified,note
+2026-06-22,59,45.7,累積,40.0,27.5,30.0,86.5,78.0,22.7,84.0,82.8,33.6,22.7,80,30,10,25,30,45,15,85,88,88,68,30,18,20,88,80,,首次v2 live;百分位bootstrap;放大器滿/引信冷/確認趴;單一火星=BDC
