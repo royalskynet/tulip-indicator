@@ -1,0 +1,10 @@
+{
+  "_comment": "Manual percentiles for proxies not auto-fetched. Update before each run; null = unverified.",
+  "M1": {"bdc_navdisc_gate": 80},
+  "M2": {"hyperscaler_capex_trigger_x_gate": 30, "ai_credit_fast": 25},
+  "M3": {"ipo_withdrawal_rate": 15, "inflow_decel": 45},
+  "M4": {"margin_debt_yoy": 88, "ai_debt_growth": 85},
+  "M5": {"mag7_share": 88, "xasset_corr": 68},
+  "M6": {"breadth_200dma": 30, "vix_term": 20, "drawdown_ath": 18},
+  "M7": {"ipo_first_day_pop_fomo": 88, "us_sentiment_positioning": 80}
+}

@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tulip-indicator"
+version = "2.1.0"
+description = "Tulip Indicator v2 — 0-100 endogenous bubble-burst meter, pure stdlib"
+requires-python = ">=3.9"
+authors = [{name = "royalskynet"}]
+dependencies = []
+
+[project.scripts]
+tulip = "tulip.cli:main"
+
+[tool.setuptools]
+packages = ["tulip"]
+include-package-data = true
+
+[tool.setuptools.package-data]
+tulip = ["proxies.json"]
