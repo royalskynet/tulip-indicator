@@ -1,114 +1,177 @@
-# 鬱金香指標 · Tulip Indicator (TI) v2.0
+# Tulip Indicator (TI) v2.1
 
-> 泛用的「內生型經濟泡沫破滅計」。單一指數 0–100，偵測榮景尾端的**脆弱度累積與點火**——不是估值高低，不是擇時倒數。
->
 > A general-purpose *endogenous bubble-burst meter*. A single 0–100 index that detects the **buildup of fragility and the ignition** at the tail end of a boom — not valuation level, not a market-timing countdown.
+
+**English** | [繁體中文](README.zh-TW.md)
+
+Methodology is documented in [`METHODOLOGY.md`](METHODOLOGY.md) (methodology v2.0); the code is v2.1.0.
 
 ---
 
-## 這是什麼 · What it is
+## Quick install
 
-**繁體中文**
-TI 把跨所有內生泡沫都成立的因果鏈拆成**七個機制（M1–M7）**，每個機制用當代最貼切的代理變數量測，對各自的歷史分佈取**連續百分位**，再加權合成 0–100 的「鬱金香值」。100 ＝ 泡沫破滅的傳導正在發生（1637 鬱金香、1929、2000、2008 那一刻）。
+Pure Python 3.9+ standard library — no third-party dependencies, nothing to build.
 
-> 不在範圍：外生衝擊（SARS、開戰、天災）。那是另一類事件，本指標不混入、不設 override。
+```bash
+git clone https://github.com/royalskynet/tulip-indicator && cd tulip-indicator && ./tulip.py
+```
 
-**English**
+That single line clones the repo, scores the index, prints the full report (display TI, band + action, three-group readout, seven mechanism scores) and appends the run to `history/ti_history_v2.csv`.
+
+**Prefer a `tulip` command on your PATH?**
+
+```bash
+pip install "tulip-indicator @ git+https://github.com/royalskynet/tulip-indicator" && tulip --version
+```
+
+**Driving it as a Claude skill?** The repo ships `SKILL.md` (rigid trigger + step-by-step runbook); drop the clone into your skills directory:
+
+```bash
+git clone https://github.com/royalskynet/tulip-indicator ~/.claude/skills/tulip-indicator
+```
+
+Requirements: Python 3.9 or newer, `git`, and network access for the FRED auto-fetch (optional — see [Updating the proxies](#updating-the-proxies)). `tulip.py` is committed with the executable bit set, so no `chmod` is needed after cloning.
+
+---
+
+## What it is
+
 TI decomposes the causal chain common to every endogenous bubble into **seven mechanisms (M1–M7)**. Each is measured by the proxy variable that best fits the current era, scored as a **continuous percentile** against its own history, then weighted into a 0–100 "Tulip Value." 100 means the burst transmission is actively underway (the 1637 tulip mania, 1929, 2000, 2008 moment).
 
 > Out of scope: exogenous shocks (pandemics, war, disasters). Those are a different class of event — never mixed in, no override.
 
 ---
 
-## 七機制 · The Seven Mechanisms
+## The seven mechanisms
 
-| 代碼<br>Code | 機制（不變骨架）<br>Mechanism (fixed skeleton) | 2026 權重<br>Weight | 角色 · Role |
+| Code | Mechanism (fixed skeleton) | 2026 weight | Role |
 |---|---|---|---|
-| **M1** | 信貸計價 · Credit pricing (shadow-bank mismatch) | 25% | 領頭＋脈衝源 · Lead + pulse |
-| **M2** | 資本支出轉折 · Capex inflection (real capacity) | 18% | 領頭 · Lead |
-| **M3** | 邊際買家枯竭 · Marginal-buyer exhaustion | 14% | 領頭 · Lead |
-| **M4** | 槓桿 · Leverage / credit expansion | 10% | 嚴重度放大器 · Severity amplifier |
-| **M5** | 集中度/偽分散 · Concentration / false diversification | 10% | 結構 · Structure |
-| **M6** | 結構確認 · Structural confirmation (synchronized ignition) | 15% | 脈衝源/確認 · Pulse / confirm |
-| **M7** | 情緒/全民化 · Sentiment / retail mania | 8% | 油表 · Fuel gauge |
+| **M1** | Credit pricing (shadow-bank mismatch) | 25% | Lead + pulse |
+| **M2** | Capex inflection (real capacity) | 18% | Lead |
+| **M3** | Marginal-buyer exhaustion | 14% | Lead |
+| **M4** | Leverage / credit expansion | 10% | Severity amplifier |
+| **M5** | Concentration / false diversification | 10% | Structure |
+| **M6** | Structural confirmation (synchronized ignition) | 15% | Pulse / confirm |
+| **M7** | Sentiment / retail mania | 8% | Fuel gauge |
 
-機制是**不變骨架**；代理隨時代換（1929 券商 call loan → 2000 dot-com IPO → 2008 房貸證券化 → 2026 AI capex × 私募信貸 × 被動 ETF 集中）。
-Mechanisms are the **fixed skeleton**; proxies rotate with the era. Weights float with the dominant bubble structure — see `METHODOLOGY.md` §8.
+The mechanisms are the **fixed skeleton**; the proxies rotate with the era (1929 broker call loans → 2000 dot-com IPOs → 2008 mortgage securitization → 2026 AI capex × private credit × passive-ETF concentration). Weights float with the dominant bubble structure — see `METHODOLOGY.md` §8.
 
 ---
 
-## 三組摘要 · The Three-Group Readout
+## The three-group readout
 
-七機制在底層計算，報告層收斂成三組，一眼看懂「柴、火、燒」。
-Seven mechanisms compute underneath; the report collapses them into three groups — *fuel, spark, fire*.
+The seven mechanisms compute underneath; the report collapses them into three groups — *fuel, spark, fire*.
 
-| 組 · Group | 含機制 · Contains | 讀什麼 · Reads |
+| Group | Contains | Reads |
 |---|---|---|
-| 放大器（乾柴多高）<br>Amplifier (how much dry tinder) | M4 + M5 + M7 | 結構多脆、爆了多慘（可高位盤旋數年）<br>How fragile / how bad it gets (can hover for years) |
-| 領先引信（火星點了沒）<br>Leading fuse (is the spark lit) | M1 + M2 + M3 | 領先轉折是否開始——**這組才是計時器**<br>Whether the lead inflection has begun — *the real clock* |
-| 確認（燒起來沒）<br>Confirmation (is it burning) | M6 | 災難是否正在傳導，亮即 90→100 那一哩<br>Whether the cascade is transmitting — the final mile |
+| Amplifier (how much dry tinder) | M4 + M5 + M7 | How fragile / how bad it gets (can hover for years) |
+| Leading fuse (is the spark lit) | M1 + M2 + M3 | Whether the lead inflection has begun — *the real clock* |
+| Confirmation (is it burning) | M6 | Whether the cascade is transmitting — the final mile |
 
-**判讀口訣 · Rule of thumb:** 放大器高＋引信低＋確認趴 ＝ 滿地汽油、火柴未劃（累積期）。最該盯的是「領先引信」由低轉高那一刻，而非總分絕對值。
-High amplifier + low fuse + flat confirmation = gasoline everywhere, match unlit (accumulation). Watch the *moment the leading fuse turns up*, not the absolute total.
+**Rule of thumb:** high amplifier + low fuse + flat confirmation = gasoline everywhere, match unlit (accumulation). Watch the *moment the leading fuse turns up*, not the absolute total.
 
 ---
 
-## 顯示刻度與區間 · Display Scale & Bands
+## Display scale & bands
 
-內部 raw 危險線在 70，對外做單調映射把危險線推到直覺的 **90**。顯示 90 ＝ 引信備妥/危險線；90–100 ＝ 那段幾天的脈衝。
-Internal raw danger line is 70; a monotone mapping pushes it to an intuitive **90** for display. Display 90 = fuse armed / danger line; 90–100 = the few-day pulse.
+The internal raw danger line is 70; a monotone mapping pushes it to an intuitive **90** for display. Display 90 = fuse armed / danger line; 90–100 = the few-day pulse.
 
-| TI（顯示 · display） | 狀態 · State | 行動 · Action |
+| TI (display) | State | Action |
 |---|---|---|
-| 0–50 | 平靜 · Calm | 正常配置，每月查 · Normal allocation, check monthly |
-| 50–75 | 累積 · Accumulating | 停止加碼風險，壓測組合能否扛 −35% · Stop adding risk, stress-test −35% |
-| 75–90 | 警戒/逐步退場 · Alert / phased exit | **逐步退場窗口，90 前退完**；改週查 · Phased-exit window, be out before 90; check weekly |
-| 90–100 | 進行中/太晚 · Underway / too late | 控損，不在底部被迫賣 · Damage control, don't sell forced at the bottom |
+| 0–50 | Calm | Normal allocation, check monthly |
+| 50–75 | Accumulating | Stop adding risk, stress-test −35% |
+| 75–90 | Alert / phased exit | **Phased-exit window, be out before 90**; check weekly |
+| 90–100 | Underway / too late | Damage control, don't sell forced at the bottom |
 
-**關於跳機點 · On the bailout point：** 不要把跳傘設在 90。看到 90，那一哩已在進行、你是賣在下殺裡。**理想是 75 起分批退、90 前退完。** 75–90 是行動線，90 之後是描述線。
-Don't set the parachute at 90 — by the time you see 90 you're selling into the crash. **Exit in tranches from 75, be out before 90.** 75–90 is the action line; past 90 is just description.
+**On the bailout point:** don't set the parachute at 90. By the time you see 90, that mile is already running and you are selling into the crash. **Exit in tranches from 75, be out before 90.** 75–90 is the action line; past 90 is just description.
 
 ---
 
-## 檔案 · Files
+## Running it
 
-| 檔案 · File | 說明 · Description |
+```
+./tulip.py                      # single-file entry point (stdlib only)
+./tulip.py --no-fred            # skip the FRED fetch
+./tulip.py --show               # print the resolved proxy percentiles and exit
+./tulip.py --set M1.hy_oas=45 --set M4.margin_debt_yoy=92
+./tulip.py --selftest           # built-in assertions
+./tulip.py --version
+
+python3 -m tulip                # same thing via the installed package
+```
+
+| Flag | Effect |
 |---|---|
-| `METHODOLOGY.md` | 完整方法論 v2：七機制、百分位計分、權重、顯示刻度、否證測試 · Full v2 methodology |
-| `indicators.yaml` | 機讀規格：每代理的抓數指令、transform、視窗、閾值 · Machine-readable spec |
-| `score.py` | 計分引擎：代理百分位 → 機制 → raw → 顯示 TI ＋三組摘要 · Scoring engine |
-| `CLAUDE.md` | AI 代理執行指令（任何型號含 Sonnet 可接手）· Agent runbook |
-| `SKILL.md` | RIGID skill 觸發與步驟 · Skill trigger & steps |
-| `history/ti_history_v2.csv` | v2 歷次讀數紀錄（每代理原始值＋百分位）· v2 reading log |
-| `history/ti_history.csv` | v1.1 舊紀錄（schema 不同，保留為歷史）· deprecated v1.1 log |
-| `CHANGELOG.md` | 版本/權重修訂紀錄（防止為了分數好看而調規則）· Version & threshold revisions |
+| `--no-fred` | Skip the FRED auto-fetch and score the bundled manual percentiles only |
+| `--set MECH.PROXY=PCT` | Override one proxy percentile (repeatable); `none` marks it unverified |
+| `--show` | Print the resolved proxy JSON and exit without scoring |
+| `--date YYYY-MM-DD` | Override the run date (default: today) |
+| `--history PATH` | History CSV (default `history/ti_history_v2.csv`, created if missing) |
+| `--note TEXT` | Free-text note stored alongside the row |
+| `--window N` | Percentile window in days (default 756) |
+| `--version` | Print the version |
+| `--selftest` | `tulip.py` only: run the built-in assertions |
+
+Run the smoke tests with:
+
+```bash
+PYTHONPATH=. python3 tests/test_smoke.py
+```
+
+(`python3 -m pytest tests/` works too if pytest is installed.)
+
+### Updating the proxies
+
+Two proxies are fetched automatically from FRED when `FRED_API_KEY` is present in the environment or in a `.env` file next to the working directory:
+
+- `M1.hy_oas` — FRED series `BAMLH0A0HYM2` (high-yield OAS)
+- `M1.hy_ig` — FRED series `BAMLH0A0HYM2` − `BAMLC0A0CM`, the high-yield minus investment-grade spread
+
+Every other proxy is a **manual percentile** kept in `tulip/proxies.json` (the bundled `tulip.py` carries the same values inline). Refresh those per run — or let the Claude skill in `SKILL.md` do the fetching and scoring — and override individual values with `--set M1.hy_oas=45`. Without an API key the tool still runs, on the bundled numbers, and says so on stderr.
+
+```bash
+echo "FRED_API_KEY=your-key" > .env
+```
+
+`.env` is git-ignored. Never commit a key.
+
+### Driving it from an agent
+
+Tell Claude 「跑一次鬱金香指標」 / `!ti` / "run the Tulip Indicator". The agent walks the proxy list in `indicators.yaml`, fetches each one, percentile-scores against its own window, weights the seven mechanisms, emits the display TI + three-group readout, appends to `history/ti_history_v2.csv` and writes the traffic-light report defined in `SKILL.md`. `CLAUDE.md` is the same runbook in longer form for any model.
+
+**Cadence:** TI < 50 monthly; 50–75 check the leading fuse weekly; > 75 full table weekly, M6 may be daily.
 
 ---
 
-## 使用方式 · Usage
+## Files
 
-**對 Claude 說 · Tell Claude:**「跑一次鬱金香指標」/ `!ti` / "run the Tulip Indicator"。
-
-代理會：逐項依 `indicators.yaml` 上網抓最新數據 → 對自身歷史窗取百分位 → 七機制加權 → 顯示 TI ＋三組摘要 → 追加 `history/ti_history_v2.csv` → 輸出紅黃綠燈報告與分析。
-The agent fetches each proxy per `indicators.yaml`, percentile-scores against its own window, weights the seven mechanisms, emits the display TI + three-group readout, appends to `history/ti_history_v2.csv`, and writes a traffic-light report.
-
-**手動計分 · Manual scoring:** 把當期百分位填入 `score.py` 的 `PROXIES` 後 `python3 score.py`。
-
-**頻率 · Cadence:** TI < 50 每月；50–75 每週查領先引信；> 75 全表每週、M6 可每日。
-
----
-
-## 紀律 · Discipline
-
-- **不為過去擬合 · No fitting to the past**：2000/2008 只當否證抓壞代理，禁止為命中歷史調權重（n≤5，擬合＝自欺）。Used only to catch broken proxies, never to tune weights.
-- **連續兩期確認遷移 · Two-period confirmation**：單期跳區先標「待確認」。
-- **不給具體日期 · No date predictions**：時間框架只以區間 + 歷史類比表述。
-- **分數不為情緒讓步 · Scores ignore your position**：不得因使用者倉位或情緒調整任何代理分數。
+| File | Description |
+|---|---|
+| `tulip.py` | Single-file, stdlib-only entry point — clone and run |
+| `tulip/cli.py` | CLI: FRED fetch, `--set` overrides, report, history append |
+| `tulip/score.py` | Scoring engine: proxy percentiles → mechanisms → raw → display TI + three-group readout |
+| `tulip/fred.py` | FRED fetch + percentile / spread helpers |
+| `tulip/proxies.json` | Manual percentiles for the proxies that are not auto-fetched |
+| `METHODOLOGY.md` | Full v2 methodology: mechanisms, percentile scoring, weights, display scale, falsification tests |
+| `indicators.yaml` | Machine-readable spec: each proxy's fetch command, transform, window, thresholds |
+| `SKILL.md` | RIGID skill trigger and steps |
+| `CLAUDE.md` | Agent runbook (any model, including Sonnet) |
+| `history/ti_history_v2.csv` | v2 reading log (raw value + percentile per proxy) |
+| `history/ti_history.csv` | Deprecated v1.1 log (different schema, kept for history) |
+| `CHANGELOG.md` | Version and threshold revisions — the guard against tuning rules to flatter the score |
+| `tests/test_smoke.py` | Smoke tests for percentile, spread alignment, merge, overrides and bands |
 
 ---
 
-## 免責 · Disclaimer
+## Discipline
 
-**繁體中文**　本指數刻意偏領先（M1+M2+M3 共 57% 權重），會提前示警、有空頭假訊號、會在高位卡很久——這是特性不是失靈。時間框架基於 n≤5 的歷史類比，是條件區間而非預測。最高原則：**不被迫在底部賣出**，而非精準擇時。
+- **No fitting to the past.** 2000/2008 are used only to catch broken proxies, never to tune weights (n≤5, fitting = self-deception).
+- **Two-period confirmation.** A single-period band jump is labeled "pending confirmation".
+- **No date predictions.** Time frames are expressed as conditional ranges plus historical analogues only.
+- **Scores ignore your position.** No proxy score may be adjusted for the reader's holdings or mood.
 
-**English**　The index is deliberately leading (M1+M2+M3 = 57% weight): it warns early, throws false bear signals, and can sit high for a long time — by design, not malfunction. Time frames rest on n≤5 historical analogues — conditional ranges, not forecasts. Prime directive: **never be forced to sell at the bottom**, not precise timing. Not investment advice.
+---
+
+## Disclaimer
+
+The index is deliberately leading (M1+M2+M3 = 57% weight): it warns early, throws false bear signals, and can sit high for a long time — by design, not malfunction. Time frames rest on n≤5 historical analogues — conditional ranges, not forecasts. Prime directive: **never be forced to sell at the bottom**, not precise timing. Not investment advice.
